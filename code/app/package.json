@@ -1,15 +1,16 @@
 {
-  "name": "Placeholder Name",
+  "name": "mon_application",
   "version": "1.0.0",
-  "description": "A Webstore Application",
-  "main": "server.mjs",
+  "description": "Une application Node.js",
+  "main": "server.js",
   "scripts": {
-    "start": "nodemon server.,js -L"
+    "start": "nodemon server.mjs -L --ext mjs,js,json"
   },
+  "type": "module",
   "dependencies": {
     "express": "^4.19.1",
-    "mysql": "^2.18.1",
-    "mysql2": "^3.9.2",
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "mysql2": "^3.9.3",
+    "jsonwebtoken": "^9.0.2"    
   }
 }

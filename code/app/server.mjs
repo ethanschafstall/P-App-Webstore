@@ -1,41 +1,26 @@
+
+
+// Librairies et ressources
+
 import express from "express";
-import { userRouter } from './routes/User.mjs';
-import mysql from "mysql2";
+import userRoute from "./routes/User.mjs";
+import authRoute from "./routes/Auth.mjs";
 
-// Get the client
+
+import { generateSalt } from './utils/generateSalt.mjs';
+
 const app = express();
+
+// Middleware pour la lecture des réponses formatées en json
 app.use(express.json());
-const port = 3000;
+
+// Les routes
+app.use('/user', userRoute);
+app.use('/auth', authRoute);
 
 
-app.use('/users/', userRouter);
-
-export const connection = mysql.createConnection({
-  host: 'localhost',
-  port: 6033,
-  user: 'root',
-  password: 'root',
-  database: 'db_test',
-});
-
-// // sample select query
-// connection.execute(
-//   'SELECT * FROM `t_users`',
-//   function (err, results) {
-//     console.log(results);
-//   }
-// );
-
-// // sample insert query
-// connection.execute(
-//   'INSERT INTO `t_users`(`name`) VALUES (\'test\')',
-//   function (err, results) {
-//     console.log(results);
-//   }
-// );
-
-
+let port = 443;
 // Démarrage du serveur
 app.listen(port, () => {
-    console.log('Server running on port 8080');
+    console.log(`Server running at http://localhost:${port}`);
 });

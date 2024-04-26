@@ -1,19 +1,46 @@
-import { connection } from "../server.mjs";
-import mysql from "mysql2";
+import express from "express";
 
-export const UserController = {
-    // get single user
-    getUser: (req, res) => {
+// Import du module jwt
+import jwt from 'jsonwebtoken';
 
-        connection.execute(
-        `SELECT * FROM 't_users'`,
-        function (err, results) {
-            console.log(results);
-        }
-        );
-    },
-    // get all users
-    getUsers: (req, res) => {
-        res.send("User: Sarah");
+const router = express.Router();
+import { privateKey } from "../privateKey.mjs";
+export const get = (req, res) => {
+  
+    const authorizationHeader = req.headers.authorization;
+
+    // Checking if authorization header exists
+    if (!authorizationHeader) {
+        // If authorization header is missing, return 401 Unauthorized status
+        const message = `Vous n'avez pas fourni de jeton d'authentification. Ajoutez-en un dans l'en-tête de la requête.`;
+        return res.status(401).json({ message });
+    } else {
+        // Extracting token from authorization header
+        const token = authorizationHeader.split(" ")[1];
+        
+        // Verifying the token with the secret key
+        jwt.verify(token, privateKey, (error, decodedToken) => {
+            if (error) {
+                // If token verification fails, return 401 Unauthorized status
+                const message = `L'utilisateur n'est pas autorisé à accéder à cette ressource`;
+                return res.status(401).json({ message });
+            }
+            // Extracting user ID from the decoded token
+            const userId = decodedToken.username;
+            // Checking if the user ID in the request body matches the one in the token
+            if (req.body.userId && req.body.userId !== userId) {
+                // If user ID in the request body doesn't match the one in the token, return 401 Unauthorized status
+                const message = `L'identifiant de l'utilisateur est invalide`;
+                return res.status(401).json({ message });
+            } else {
+                // If everything is fine, proceed to the next middleware
+                return res.status(200).json({ decodedToken });
+            } 
+        });
     }
+
 };
+
+router.get('/', get);
+
+export default router;

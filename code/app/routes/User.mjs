@@ -1,9 +1,7 @@
-import { UserController } from '../controllers/UserController.mjs';
 import express from "express";
+import { get } from "../controllers/UserController.mjs";
 
-const userRouter = express.Router();
+const router = express.Router();
+router.get('/', get);
 
-userRouter.get('/', UserController.getUsers)
-userRouter.get('/:id', UserController.getUser)
-
-export { userRouter }
+export default router;
