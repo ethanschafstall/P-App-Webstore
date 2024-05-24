@@ -32,24 +32,13 @@ router.post('/', connectToDatabaseMiddleware, async (req, res) => {
     const [rows] = await req.dbConnection.execute(queryString, [username, password]);
     if (rows.length > 0) {
 
-      // // HS256
-      // // signer et renvoyer votre token ici (utiliser un code http de succès)
-      // const secrectKey = "test";  
-      // const token = jwt.sign({ name: "hello", iat: Math.floor(Date.now() / 1000) - 30 }, secrectKey,
-      //   { algorithm: 'HS256',
-      //   expiresIn: "2y" } /* Token expires in 2 year*/
-      // );
-      // const message = `L'utilisateur a été connecté avec succès`;
-      // // Return success message along with user data and token
-      // return res.status(200).json({ message, token});
-
+      
       const message = `user has successfully connected`;
       const token = jwt.sign({ name: "hello", iat: Math.floor(Date.now() / 1000) - 30 }, privateKey, {
-        expiresIn: "2y" // Token expires in 1 year
+        expiresIn: "1y"
     });
     return res.status(200).json({ message, token});
 
-      
 
     } else {
       res.status(401).json({ error: "Invalid username or password" });

@@ -1,47 +1,51 @@
-import { generateSalt } from './utils/generateSalt.mjs';
+
 import express from "express";
 import jwt from 'jsonwebtoken';
+import { connectToDatabase } from "../tools/sqlConnection.mjs";
+import { hash } from "../tools/hash.mjs";
+const registerRoute = express(); // Creating a new instance of express router
 
-const registerRouter = express(); // Creating a new instance of express router
+const connectToDatabaseMiddleware = async (req, res, next) => {
+    try {
+      req.dbConnection = await connectToDatabase();
+      next();
+    } catch (error) {
+      console.error("Error connecting to the database:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
 
 // Endpoint for handling user login
-registerRouter.post("/", (req, res) => {
-    const { firstname, lastname, username, password, country, email, npa, address, salt } = req.body;
-    
-    // Finding the user in the database by username
-    User.findOne({ where: { usePseudo: req.body.username } })
-        .then((user) => {
-            // If user doesn't exist, return 404 error
-            if (!user) {
-                const message = `L'utilisateur demandé n'existe pas`;
-                return res.status(404).json({ message });
-            }
-            // Comparing the provided password with the hashed password stored in the database
-            bcrypt.compare(req.body.password, user.usePassword)
-                .then((isPasswordValid) => {
-                    // If password is invalid, return 401 error
-                    if (!isPasswordValid) {
-                        const message = `Le mot de passe est incorrecte`
-                        return res.status(401).json({ message });
-                    } else {
-                        // If password is valid, generate JWT token
-                        const token = jwt.sign({ userId: user.id_user}, privateKey, {
-                            expiresIn: "1y" // Token expires in 1 year
-                        });
-                        const message = `L'utilisateur a été connecté avec succès`;
-                        // Return success message along with user data and token
-                        return res.json({ message, data: user, token});
-                    }
-                });
-        })
-        .catch((error) => {
-            // If an error occurs during the process, return a generic error message
-            const message = `L'utilisateur n'a pas pu être connecté. Réesssayez dans quelques instants`;
-            return res.json({ message, data: error });
-        })
-})
+registerRoute.post('/', connectToDatabaseMiddleware, async (req, res) => {
+    const { username, password, role} = req.body;
+    const [hashedPassword, salt] = hash(password);
 
-const CheckDataType = (value, type,) => {
-    
+    if (!CheckDataType(username, "string") || !CheckDataType(role, "string")) {
+        return res.status(401).json({ error: "Invalid value types" });
+    }
+    const queryString2 = `Insert Into t_users (useUsername, usePassword, useRole, useSalt) Values (?,?,?,?)`;
+    try {
+      const [rows] = await req.dbConnection.execute(queryString2, [username, hashedPassword, role, salt]);
+      if (rows.length < 0) {
+        
+  
+        const message = `user has successfully connected`;
+      return res.status(200).json({message});
+  
+        
+  
+      } else {
+        console.log(rows)
+        res.status(401).json({ error: "Invalid username or password" });
+      }
+    } catch (error) {
+      console.error("Error authenticating user:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+const CheckDataType = (value, type) => {
+
+    return typeof value === type
 }
-export { registerRouter }; // Exporting the router for use in other files
+export { registerRoute }; // Exporting the router for use in other files

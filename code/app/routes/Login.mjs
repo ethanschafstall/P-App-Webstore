@@ -1,14 +1,14 @@
 import express from "express"; // Importing express for router creation
-import bcrypt from "bcrypt"; // Importing bcrypt for password hashing
+// import bcrypt from "bcrypt"; // Importing bcrypt for password hashing
 import jwt from "jsonwebtoken"; // Importing JWT for token generation
-import { User } from "../../db/sequelize.mjs"; // Importing User model from sequelize
-import { privateKey } from "../../auth/private_key.mjs"; // Importing private key for JWT
+// import { User } from "../../db/sequelize.mjs"; // Importing User model from sequelize
+import { privateKey } from "../privateKey.mjs"; // Importing private key for JWT
 
-const loginRouter = express(); // Creating a new instance of express router
+const loginRoute = express(); // Creating a new instance of express router
 
 
 // Endpoint for handling user login
-loginRouter.post("/", (req, res) => {
+loginRoute.post("/", (req, res) => {
     const { username, password } = req.body;
     User.findOne({ where: { usePseudo: req.body.username } })
         .then((user) => {
@@ -42,4 +42,4 @@ loginRouter.post("/", (req, res) => {
         })
 })
 
-export { loginRouter }; // Exporting the router for use in other files
+export { loginRoute }; // Exporting the router for use in other files
