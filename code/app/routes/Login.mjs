@@ -1,45 +1,43 @@
 import express from "express"; // Importing express for router creation
-// import bcrypt from "bcrypt"; // Importing bcrypt for password hashing
-import jwt from "jsonwebtoken"; // Importing JWT for token generation
-// import { User } from "../../db/sequelize.mjs"; // Importing User model from sequelize
-import { privateKey } from "../privateKey.mjs"; // Importing private key for JWT
+import { connectToDatabase } from "../tools/sqlConnection.mjs";
+import { checkHash } from "../tools/hash.mjs";
+import { generateToken } from "../tools/createToken.mjs";
 
 const loginRoute = express(); // Creating a new instance of express router
 
+const connectToDatabaseMiddleware = async (req, res, next) => {
+    try {
+      req.dbConnection = await connectToDatabase();
+      next();
+    } catch (error) {
+      console.error("Error connecting to the database:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
 
 // Endpoint for handling user login
-loginRoute.post("/", (req, res) => {
+loginRoute.post("/", connectToDatabaseMiddleware, async (req, res) => {
     const { username, password } = req.body;
-    User.findOne({ where: { usePseudo: req.body.username } })
-        .then((user) => {
-            // If user doesn't exist, return 404 error
-            if (!user) {
-                const message = `L'utilisateur demandé n'existe pas`;
-                return res.status(404).json({ message });
-            }
-            // Comparing the provided password with the hashed password stored in the database
-            bcrypt.compare(req.body.password, user.usePassword)
-                .then((isPasswordValid) => {
-                    // If password is invalid, return 401 error
-                    if (!isPasswordValid) {
-                        const message = `Le mot de passe est incorrecte`
-                        return res.status(401).json({ message });
-                    } else {
-                        // If password is valid, generate JWT token
-                        const token = jwt.sign({ userId: user.id_user}, privateKey, {
-                            expiresIn: "1y" // Token expires in 1 year
-                        });
-                        const message = `L'utilisateur a été connecté avec succès`;
-                        // Return success message along with user data and token
-                        return res.json({ message, data: user, token});
-                    }
-                });
-        })
-        .catch((error) => {
-            // If an error occurs during the process, return a generic error message
-            const message = `L'utilisateur n'a pas pu être connecté. Réesssayez dans quelques instants`;
-            return res.json({ message, data: error });
-        })
-})
+    const queryString = `SELECT * FROM t_users WHERE useUsername = ?`;
+
+    try {
+        
+        const [result] = await req.dbConnection.execute(queryString, [username]);
+        const user = result[0];
+        const salt = user.useSalt;
+        const stockedHash = user.usePassword;
+
+        if (stockedHash != checkHash(salt, password)) {
+            const message = `Invalid username or password.`;
+            return res.status(401).json({ message });
+        }
+        const message = `User has successfully logged in.`;
+        const token = generateToken(user);
+        return res.status(200).json({ message, token });
+    } catch (error) {
+      console.error("Error logging in:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
 export { loginRoute }; // Exporting the router for use in other files
