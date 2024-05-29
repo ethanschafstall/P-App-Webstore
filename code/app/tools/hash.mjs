@@ -1,13 +1,20 @@
 import CryptoJS from "crypto-js";
+import dotenv from 'dotenv';
 
-export function hash(message) {
-  const baseSalt = addSalt(message.length+101);
-  console.log(baseSalt)
-  const finalSalt = saltTheSalt(baseSalt);
-  console.log(finalSalt)
-  const hash = CryptoJS.SHA256(message+finalSalt);
-  console.log(hash.toString(CryptoJS.enc.Hex))
-  return [hash.toString(CryptoJS.enc.Hex), baseSalt];
+dotenv.config();
+
+const pepper = process.env.PEPPER;
+
+
+export function generateHash(message) {
+  const salt = addSalt(message.length);
+  const hash = CryptoJS.SHA256(salt + message + pepper);
+  return [hash.toString(CryptoJS.enc.Hex), salt];
+}
+
+export function checkHash(salt, message) {
+  const hash = CryptoJS.SHA256(salt + message + pepper);
+  return hash.toString(CryptoJS.enc.Hex);
 }
 
 function addSalt(length) {
@@ -15,18 +22,9 @@ function addSalt(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const charactersLength = characters.length;
     let counter = 0;
-    while (counter < length) {
+    while (counter < length+10) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
       counter += 1;
     }
     return result;
-}
-function saltTheSalt(salt){
-  let finalSalt = '';
-  for (let index = 3; index < salt.length-9; index++) {
-    if (index % 2 == 0) {
-      finalSalt += salt[index];
-    }
-  }
-  return finalSalt;
 }
