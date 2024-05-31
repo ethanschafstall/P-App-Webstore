@@ -16,7 +16,7 @@ services:
         ports:
             - "6033:3306"
         volumes:
-            - ./dbSetup.sql:/docker-entrypoint-initdb.d/dbSetup.sql
+            - ./db:/docker-entrypoint-initdb.d
       
     phpmyadmin:
         image: phpmyadmin:5.2.0
