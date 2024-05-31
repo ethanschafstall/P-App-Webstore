@@ -19,17 +19,17 @@ const connectToDatabaseMiddleware = async (req, res, next) => {
 
 // Endpoint for handling user login
 registerRoute.post('/', connectToDatabaseMiddleware, async (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password} = req.body;
   const [hashedPassword, salt] = generateHash(password);
 
-  if (!CheckDataType(username, "string") || !CheckDataType(role, "string")) {
+  if (!CheckDataType(username, "string")) {
     return res.status(401).json({ error: "Invalid value types" });
   }
 
-  const queryString = `INSERT INTO t_users (useUsername, usePassword, useRole, useSalt) VALUES (?, ?, ?, ?)`;
+  const queryString = `INSERT INTO t_users (useUsername, usePassword, useSalt) VALUES (?, ?, ?, ?)`;
 
   try {
-    const [result] = await req.dbConnection.execute(queryString, [username, hashedPassword, role, salt]);
+    const [result] = await req.dbConnection.execute(queryString, [username, hashedPassword, salt]);
 
     if (result.affectedRows === 1) {
       const message = `User has successfully registered.`;
