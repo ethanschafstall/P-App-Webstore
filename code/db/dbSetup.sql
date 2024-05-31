@@ -6,7 +6,7 @@ CREATE TABLE t_users (
    userId INT AUTO_INCREMENT,
    useUsername VARCHAR(50) NOT NULL,
    usePassword VARCHAR(400) NOT NULL,
-   useRole VARCHAR(50) NOT NULL,
+   useRole VARCHAR(50)ALLOW NULL,
    useSalt VARCHAR(400) NOT NULL,
    PRIMARY KEY (userId)
 );
